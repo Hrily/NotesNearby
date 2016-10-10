@@ -1,0 +1,48 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context="com.hrily.notesnearby.AddNoteFragment">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="New Note :"
+            android:textColor="@android:color/background_dark"
+            android:textSize="24dp"/>
+
+        <EditText
+            android:id="@+id/note_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Title"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@android:color/background_dark"
+            android:textColorHint="#777" />
+
+        <EditText
+            android:id="@+id/note_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Description"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@android:color/background_dark"
+            android:textColorHint="#777" />
+
+        <Button
+            android:id="@+id/add_note_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Note to My Location"
+            android:background="@color/colorPrimary"
+            android:textColor="#fff"/>
+
+    </LinearLayout>
+
+</FrameLayout>
