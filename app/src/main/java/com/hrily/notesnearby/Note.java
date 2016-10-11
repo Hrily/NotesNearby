@@ -1,8 +1,8 @@
 package com.hrily.notesnearby;
+//////////////
+// by hrily //
+//////////////
 
-/**
- * Created by hrishi on 8/10/16.
- */
 public class Note {
     public double lat, lng;
     public String title, desc, id;

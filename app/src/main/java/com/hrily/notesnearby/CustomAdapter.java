@@ -1,4 +1,7 @@
 package com.hrily.notesnearby;
+//////////////
+// by hrily //
+//////////////
 
 import java.util.List;
 import android.app.Activity;

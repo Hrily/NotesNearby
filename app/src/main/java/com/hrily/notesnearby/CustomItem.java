@@ -1,8 +1,8 @@
 package com.hrily.notesnearby;
+//////////////
+// by hrily //
+//////////////
 
-/**
- * Created by hrishi on 9/10/16.
- */
 public class CustomItem {
 
     String ItemName;

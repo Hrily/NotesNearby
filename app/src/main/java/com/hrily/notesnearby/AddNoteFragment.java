@@ -1,4 +1,7 @@
 package com.hrily.notesnearby;
+//////////////
+// by hrily //
+//////////////
 
 import android.app.Activity;
 import android.app.ProgressDialog;
