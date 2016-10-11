@@ -3,17 +3,22 @@ package com.hrily.notesnearby;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,10 +27,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 /**
- * Created by krzysztofjackowski on 24/09/15.
+ * Created by hrily on 11/10/16
  */
 public class ARActivity extends Activity implements
-        SurfaceHolder.Callback, OnLocationChangedListener, OnAzimuthChangedListener{
+        SurfaceHolder.Callback, OnLocationChangedListener, OnAzimuthChangedListener, View.OnClickListener{
 
     private Camera mCamera;
     private SurfaceHolder mSurfaceHolder;
@@ -42,7 +47,12 @@ public class ARActivity extends Activity implements
     private MyCurrentLocation myCurrentLocation;
 
     TextView descriptionTextView;
-    List<ImageView> pointerIcons;
+    List<LinearLayout> pointerIcons;
+
+    TextView note_title, note_desc, note_latlng;
+    LinearLayout note;
+    RelativeLayout points;
+    Button close;
 
     Display display;
 
@@ -59,6 +69,22 @@ public class ARActivity extends Activity implements
         notes = new ArrayList<>();
         pointerIcons = new ArrayList<>();
 
+        note = (LinearLayout) findViewById(R.id.ar_note);
+        note.setVisibility(View.INVISIBLE);
+        close = (Button) findViewById(R.id.ar_close);
+        close.setVisibility(View.INVISIBLE);
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                close.setVisibility(View.INVISIBLE);
+                note.setVisibility(View.INVISIBLE);
+            }
+        });
+        points = (RelativeLayout) findViewById(R.id.ar_points);
+        note_title = (TextView) findViewById(R.id.ar_title);
+        note_desc = (TextView) findViewById(R.id.ar_desc);
+        note_latlng = (TextView) findViewById(R.id.ar_latlng);
+
         Bundle b = getIntent().getExtras();
 
         double lats[] = b.getDoubleArray("LATS");
@@ -68,11 +94,26 @@ public class ARActivity extends Activity implements
 
         for(int i=0;i<lats.length;i++){
             notes.add(new Note(lats[i], lngs[i], titles[i], descs[i]));
+            LinearLayout ll = new LinearLayout(this);
+            ll.setGravity(Gravity.CENTER);
+            ll.setVisibility(View.INVISIBLE);
+            ll.setOrientation(LinearLayout.VERTICAL);
             ImageView img = new ImageView(this);
-            img.setVisibility(View.INVISIBLE);
-            img.setImageResource(R.drawable.common_google_signin_btn_icon_dark);
-            addContentView(img, new RelativeLayout.LayoutParams(50, 50));
-            pointerIcons.add(img);
+            img.setImageResource(R.mipmap.ic_note);
+            img.setTag(notes.get(i));
+            img.setOnClickListener(this);
+            img.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            ll.addView(img);
+            TextView tv = new TextView(this);
+            tv.setText(titles[i]);
+            tv.setTag(notes.get(i));
+            tv.setPadding(3, 3, 3, 3);
+            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            tv.setTextColor(Color.WHITE);
+            tv.setBackgroundColor(Color.argb(150,0,0,0));
+            ll.addView(tv);
+            points.addView(ll,new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            pointerIcons.add(ll);
         }
 
         Log.e("AR", String.valueOf(lats.length));
@@ -156,7 +197,7 @@ public class ARActivity extends Activity implements
             // Don't know why to do this, but is giving desired result
             mAzimuthTeoretical = (mAzimuthTeoretical-90+360)%360;
 
-            ImageView pointerIcon = pointerIcons.get(i);
+            LinearLayout pointerIcon = pointerIcons.get(i);
 
             double minAngle = calculateAzimuthAccuracy(mAzimuthTeoretical).get(0);
             double maxAngle = calculateAzimuthAccuracy(mAzimuthTeoretical).get(1);
@@ -164,8 +205,7 @@ public class ARActivity extends Activity implements
             if (isBetween(minAngle, maxAngle, mAzimuthReal)) {
                 float perc = ((float) (mAzimuthReal - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
                 pointerIcon.setTop((int) (display.getHeight() * perc));
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(50, 50);
-                lp.topMargin = display.getHeight() / 2 - 50;
+                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.leftMargin = display.getWidth() - (int) (display.getWidth() * perc);
                 pointerIcon.setLayoutParams(lp);
                 pointerIcon.setVisibility(View.VISIBLE);
@@ -241,5 +281,19 @@ public class ARActivity extends Activity implements
         mCamera.release();
         mCamera = null;
         isCameraviewOn = false;
+    }
+
+    @Override
+    public void onClick(View v) {
+        try {
+            Note n = (Note) v.getTag();
+            note_title.setText(n.getTitle());
+            note_desc.setText(n.getDesc());
+            note_latlng.setText("@ "+n.getLat()+", "+n.getLng());
+            note.setVisibility(View.VISIBLE);
+            close.setVisibility(View.VISIBLE);
+        }catch (Exception e){
+            Log.e("AR", e.getMessage());
+        }
     }
 }
