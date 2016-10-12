@@ -3,7 +3,9 @@ package com.hrily.notesnearby;
 // by hrily //
 //////////////
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -21,9 +23,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -31,7 +36,6 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         MapFragment.OnFragmentInteractionListener,
-        LoginFragment.OnFragmentInteractionListener,
         AddNoteFragment.OnFragmentInteractionListener,
         ShowNoteFragment.OnFragmentInteractionListener{
 
@@ -40,6 +44,8 @@ public class MainActivity extends AppCompatActivity
 
     private LatLng mCurrentLocation;
     private ArrayList<Note> notes;
+
+    private String user_name, user_dp;
 
     public LatLng getmCurrentLocation() {
         return mCurrentLocation;
@@ -53,6 +59,26 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("USER_DETAILS", Context.MODE_PRIVATE);
+        user_name = sharedPreferences.getString("user_name", "null");
+        user_dp = sharedPreferences.getString("user_dp", "null");
+        if(user_name.equals("null")){
+            // User not logged in
+            // Got login activity
+            startActivity(new Intent(this, LoginActivity.class));
+        }
+
+        TextView UserName = (TextView) findViewById(R.id.user_name);
+        UserName.setText(user_name);
+        ImageView UserDP = (ImageView) findViewById(R.id.user_dp);
+        if(!user_dp.equals("null")){
+            Glide.with(this)
+                    .load(Uri.parse(user_dp))
+                    .override(100, 100)
+                    .into(UserDP);
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
