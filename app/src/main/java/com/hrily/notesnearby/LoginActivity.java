@@ -6,6 +6,7 @@ package com.hrily.notesnearby;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -91,8 +92,12 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             GoogleSignInAccount acct = result.getSignInAccount();
             SharedPreferences sharedpreferences = getSharedPreferences("USER_DETAILS", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedpreferences.edit();
-            editor.putString("user_name", acct.getDisplayName());
-            editor.putString("user_dp", acct.getPhotoUrl().toString());
+            Toast.makeText(this, acct.getDisplayName(), Toast.LENGTH_LONG).show();
+            String user_name = acct.getDisplayName();
+            Uri photo = acct.getPhotoUrl();
+            editor.putString("user_name", user_name);
+            if(photo!=null)
+                editor.putString("user_dp", photo.toString());
             editor.commit();
             startActivity(new Intent(this, MainActivity.class));
         } else {

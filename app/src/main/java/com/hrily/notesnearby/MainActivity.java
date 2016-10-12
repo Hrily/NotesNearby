@@ -60,25 +60,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SharedPreferences sharedPreferences = getSharedPreferences("USER_DETAILS", Context.MODE_PRIVATE);
-        user_name = sharedPreferences.getString("user_name", "null");
-        user_dp = sharedPreferences.getString("user_dp", "null");
-        if(user_name.equals("null")){
-            // User not logged in
-            // Got login activity
-            startActivity(new Intent(this, LoginActivity.class));
-        }
-
-        TextView UserName = (TextView) findViewById(R.id.user_name);
-        UserName.setText(user_name);
-        ImageView UserDP = (ImageView) findViewById(R.id.user_dp);
-        if(!user_dp.equals("null")){
-            Glide.with(this)
-                    .load(Uri.parse(user_dp))
-                    .override(100, 100)
-                    .into(UserDP);
-        }
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -119,6 +100,26 @@ public class MainActivity extends AppCompatActivity
                 displaySelectedScreen(position);
             }
         });
+
+        SharedPreferences sharedPreferences = getSharedPreferences("USER_DETAILS", Context.MODE_PRIVATE);
+        user_name = sharedPreferences.getString("user_name", "null");
+        user_dp = sharedPreferences.getString("user_dp", "null");
+        if(user_name.equals("null")){
+            // User not logged in
+            // Got login activity
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+
+        TextView UserName = (TextView) findViewById(R.id.user_name);
+        UserName.setText(user_name);
+        ImageView UserDP = (ImageView) findViewById(R.id.user_dp);
+        if(!user_dp.equals("null")){
+            Glide.with(this)
+                    .load(Uri.parse(user_dp))
+                    .override(100, 100)
+                    .into(UserDP);
+        }
 
         displaySelectedScreen(1);
 

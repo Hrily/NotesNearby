@@ -19,12 +19,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -103,25 +101,49 @@ public class ARActivity extends Activity implements
             ll.setGravity(Gravity.CENTER);
             ll.setVisibility(View.INVISIBLE);
             ll.setOrientation(LinearLayout.VERTICAL);
-            ImageView img = new ImageView(this);
-            img.setImageResource(R.mipmap.ic_note);
-            img.setTag(notes.get(i));
-            img.setOnClickListener(this);
-            img.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            ll.addView(img);
+            ll.setTag(notes.get(i));
+            ll.setOnClickListener(this);
+
             TextView tv = new TextView(this);
             tv.setText(titles[i]);
-            tv.setTag(notes.get(i));
             tv.setPadding(3, 3, 3, 3);
             tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             tv.setTextColor(Color.WHITE);
             tv.setBackgroundColor(Color.argb(150,0,0,0));
             ll.addView(tv);
+
+            ImageView img = new ImageView(this);
+            img.setImageResource(R.mipmap.ic_note);
+            img.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            ll.addView(img);
+
+            TextView dt = new TextView(this);
+            dt.setTag("dist");
+            dt.setText("m");
+            dt.setPadding(3, 3, 3, 3);
+            dt.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            dt.setTextColor(Color.WHITE);
+            dt.setBackgroundColor(Color.argb(150,0,0,0));
+            ll.addView(dt);
+
             points.addView(ll,new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             pointerIcons.add(ll);
         }
 
         Log.e("AR", String.valueOf(lats.length));
+    }
+
+    public static double haversine(
+            double lat1, double lng1, double lat2, double lng2) {
+        int r = 6371; // average radius of the earth in km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double d = r * c;
+        return d;
     }
 
     public double calculateTeoreticalAzimuth(Note mPoi) {
@@ -187,7 +209,6 @@ public class ARActivity extends Activity implements
     public void onLocationChanged(Location location) {
         mMyLatitude = location.getLatitude();
         mMyLongitude = location.getLongitude();
-        Toast.makeText(this,"latitude: "+location.getLatitude()+" longitude: "+location.getLongitude(), Toast.LENGTH_SHORT).show();
         updateDescription();
     }
 
@@ -213,6 +234,9 @@ public class ARActivity extends Activity implements
                 RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.leftMargin = display.getWidth() - (int) (display.getWidth() * perc);
                 pointerIcon.setLayoutParams(lp);
+                double dist = haversine(n.getLat(), n.getLng(), mMyLatitude, mMyLongitude);
+                TextView d = (TextView) pointerIcon.findViewWithTag("dist");
+                d.setText(String.format("%.2f", dist*1000)+" m");
                 pointerIcon.setVisibility(View.VISIBLE);
             } else {
                 pointerIcon.setVisibility(View.INVISIBLE);
