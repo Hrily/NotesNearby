@@ -17,23 +17,53 @@
             android:textColor="@android:color/background_dark"
             android:textSize="24dp"/>
 
-        <EditText
-            android:id="@+id/note_title"
+        <LinearLayout
             android:layout_width="match_parent"
+            android:orientation="horizontal"
             android:layout_height="wrap_content"
-            android:hint="Title"
-            android:backgroundTint="@color/colorAccent"
-            android:textColor="@android:color/background_dark"
-            android:textColorHint="#777" />
+            android:weightSum="1">
 
-        <EditText
-            android:id="@+id/note_description"
+            <EditText
+                android:id="@+id/note_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Title"
+                android:backgroundTint="@color/colorAccent"
+                android:textColor="@android:color/background_dark"
+                android:textColorHint="#777"
+                android:layout_weight="1"/>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/img_voice_title"
+                android:src="@drawable/ic_mic"/>
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
+            android:orientation="horizontal"
             android:layout_height="wrap_content"
-            android:hint="Description"
-            android:backgroundTint="@color/colorAccent"
-            android:textColor="@android:color/background_dark"
-            android:textColorHint="#777" />
+            android:weightSum="1">
+
+            <EditText
+                android:id="@+id/note_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Description"
+                android:backgroundTint="@color/colorAccent"
+                android:textColor="@android:color/background_dark"
+                android:textColorHint="#777"
+                android:layout_weight="1"/>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/img_voice_desc"
+                android:src="@drawable/ic_mic"/>
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/add_note_btn"

@@ -17,11 +17,19 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.microsoft.windowsazure.mobileservices.*;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.TableOperationCallback;
+
+import com.microsoft.bing.speech.SpeechClientStatus;
+import com.microsoft.cognitiveservices.speechrecognition.ISpeechRecognitionServerEvents;
+import com.microsoft.cognitiveservices.speechrecognition.MicrophoneRecognitionClient;
+import com.microsoft.cognitiveservices.speechrecognition.RecognitionResult;
+import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
+import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
 import java.net.MalformedURLException;
 
@@ -34,7 +42,7 @@ import java.net.MalformedURLException;
  * Use the {@link AddNoteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AddNoteFragment extends Fragment {
+public class AddNoteFragment extends Fragment implements ISpeechRecognitionServerEvents {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String LAT = "lat";
@@ -49,7 +57,13 @@ public class AddNoteFragment extends Fragment {
     Button add_note_btn;
     ProgressDialog PD;
 
+    ImageView voice_title, voice_desc;
+
     private MobileServiceClient mClient;
+
+    MicrophoneRecognitionClient micClient = null;
+    int title_desc = 0;
+    private SpeechRecognitionMode mode = SpeechRecognitionMode.ShortPhrase;
 
     public AddNoteFragment() {
         // Required empty public constructor
@@ -147,7 +161,34 @@ public class AddNoteFragment extends Fragment {
         PD = new ProgressDialog(getActivity());
         PD.setMessage("Adding note...");
         PD.setCancelable(false);
+        voice_title = (ImageView) rootView.findViewById(R.id.img_voice_title);
+        voice_desc = (ImageView) rootView.findViewById(R.id.img_voice_desc);
+        voice_title.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                title_desc = 0;
+                startVoiceCapture();
+            }
+        });
+        voice_desc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                title_desc = 1;
+                startVoiceCapture();
+            }
+        });
+        micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(
+                getActivity(), mode, "en-us", this, getPrimaryKey());
         return rootView;
+    }
+
+    public String getPrimaryKey() {
+        return this.getString(R.string.primaryKey);
+    }
+
+    public void startVoiceCapture(){
+        Log.d("VOICE", "Starting voice api...");
+        micClient.startMicAndRecognition();
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -172,6 +213,48 @@ public class AddNoteFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onPartialResponseReceived(String s) {
+        Log.d("VOICE", "Partial Response: "+s);
+        if(title_desc==0)
+            title.setText(s);
+        else
+            desc.setText(s);
+    }
+
+    @Override
+    public void onFinalResponseReceived(RecognitionResult recognitionResult) {
+        micClient.endMicAndRecognition();
+        Log.d("VOICE", "Done speaking: "+recognitionResult.Results);
+        if(recognitionResult.Results.length>0) {
+            String response = recognitionResult.Results[0].DisplayText;
+            Toast.makeText(getActivity(), response, Toast.LENGTH_SHORT).show();
+            if(title_desc==0)
+                title.setText(response);
+            else
+                desc.setText(response);
+        }
+    }
+
+    @Override
+    public void onIntentReceived(String s) {
+
+    }
+
+    @Override
+    public void onError(int i, String s) {
+        Log.d("VOICE", "Error code: " + SpeechClientStatus.fromInt(i) + " " + i);
+        Log.d("VOICE", "Error text: " + s);
+    }
+
+    @Override
+    public void onAudioEvent(boolean b) {
+        if(b)
+            Toast.makeText(getActivity(), "Start speaking", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(getActivity(), "Done Speaking", Toast.LENGTH_SHORT).show();
     }
 
     /**

@@ -3,6 +3,11 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_main">MainActivity</string>
 
+    <!-- Bing api -->
+    <string name="primaryKey">8d765a615ddb46959db8c99766fdd67e</string>
+    <string name="luisAppID">bc4d23bc-c334-4faa-98b7-b5a215fc25ee</string>
+    <string name="luisSubscriptionID">yourLuisSubscriptionID</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

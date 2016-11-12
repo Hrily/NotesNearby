@@ -97,7 +97,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             Uri photo = acct.getPhotoUrl();
             editor.putString("user_name", user_name);
             if(photo!=null)
-                editor.putString("user_dp", photo.toString());  
+                editor.putString("user_dp", photo.toString());
             editor.commit();
             startActivity(new Intent(this, MainActivity.class));
         } else {
