@@ -24,6 +24,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 
 public class LoginActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
@@ -95,6 +97,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             Toast.makeText(this, acct.getDisplayName(), Toast.LENGTH_LONG).show();
             String user_name = acct.getDisplayName();
             Uri photo = acct.getPhotoUrl();
+
             editor.putString("user_name", user_name);
             if(photo!=null)
                 editor.putString("user_dp", photo.toString());

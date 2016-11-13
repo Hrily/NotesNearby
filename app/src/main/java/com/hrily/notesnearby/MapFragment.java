@@ -16,11 +16,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
@@ -37,6 +43,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
 import com.microsoft.windowsazure.mobileservices.*;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -44,6 +52,7 @@ import com.microsoft.windowsazure.mobileservices.table.TableQueryCallback;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -73,14 +82,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     private static final long INTERVAL = 500;
     private static final long FAST_INTERVAL = 1;
     private static final String TAG = "LOC";
+    private static double NOTE_RANGE = 0.002;
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private LocationManager mLocationManager;
-    private String provider;
+    private List<String> provider;
     private ArrayList<Note> notes;
     private ArrayList<Marker> markers;
+    ClusterManager<ClusterMarkerLocation> clusterManager;
 
     private MobileServiceClient mClient;
     private MobileServiceTable<Note> mTable;
@@ -88,6 +99,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public LatLng mCurrentLocation;
 
     private FloatingActionButton fab;
+    private RelativeLayout cluster_list_layout;
+    private ListView cluster_list;
+    private ArrayAdapter<String> cluster_adapter;
+    private ArrayList<String> titles;
 
     public MapFragment() {
         // Required empty public constructor
@@ -120,60 +135,41 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
     }
 
-    public void initNotes(){
-        Random rand = new Random();
-        double range = 0.0006;
-        notes.add(new Note(42.438878+rand.nextDouble()%range, -71.119277+rand.nextDouble()%range,"t1","d1"));
-        notes.add(new Note(42.438878+rand.nextDouble()%range, -71.119277+rand.nextDouble()%range,"t2","d2"));
-        notes.add(new Note(42.438878+rand.nextDouble()%range, -71.119277+rand.nextDouble()%range,"t3","d3"));
-
-        notes.add(new Note(42.439227+rand.nextDouble()%range, -71.119689+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.439227+rand.nextDouble()%range, -71.119689+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.439227+rand.nextDouble()%range, -71.119689+rand.nextDouble()%range,"",""));
-
-        notes.add(new Note(42.438917+rand.nextDouble()%range, -71.116146+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.438917+rand.nextDouble()%range, -71.116146+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.438917+rand.nextDouble()%range, -71.116146+rand.nextDouble()%range,"",""));
-
-        notes.add(new Note(42.434980+rand.nextDouble()%range, -71.109942+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.434980+rand.nextDouble()%range, -71.109942+rand.nextDouble()%range,"",""));
-        notes.add(new Note(42.434980+rand.nextDouble()%range, -71.109942+rand.nextDouble()%range,"",""));
-
-        notes.add(new Note(42.431240+rand.nextDouble()%range, -71.109236+rand.nextDouble()%range,"T1","D1"));
-        notes.add(new Note(42.431240+rand.nextDouble()%range, -71.109236+rand.nextDouble()%range,"T2","D2"));
-        notes.add(new Note(42.431240+rand.nextDouble()%range, -71.109236+rand.nextDouble()%range,"T3","D1"));
-    }
-
-
     public void  addNote(Note note){
+        clusterManager.addItem(new ClusterMarkerLocation(new LatLng(note.getLat(), note.getLng()), note));
+        /*
         Marker m = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(note.getLat(), note.getLng()))
                 .title(note.getTitle()));
         markers.add(m);
+        */
     }
 
     public void putNotesNearby(){
         double  lat = mCurrentLocation.latitude,
                 lng = mCurrentLocation.longitude;
         // Remove existing markers out of range
+        /*
         for(int i=markers.size()-1;i>=0;i--){
             Marker  m = markers.get(i);
             double  mlat = m.getPosition().latitude,
                     mlng = m.getPosition().longitude;
             double  d = Math.sqrt(Math.pow(lat-mlat,2)+Math.pow(lng-mlng,2));
-            if(d<=0.001)
+            if(d<=NOTE_RANGE)
                 m.remove();
             markers.remove(i);
         }
-        mMap.clear();
+        */
+        clusterManager.clearItems();
         // Add additional markers
         for(Note n:notes){
             double  nlat = n.getLat(),
                     nlng = n.getLng();
             double  d = Math.sqrt(Math.pow(lat-nlat,2)+Math.pow(lng-nlng,2));
-            if(d<=0.001)
+            if(d<=NOTE_RANGE)
                 addNote(n);
         }
+        clusterManager.cluster();
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -199,6 +195,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_map, container, false);
+        rootView.setFocusableInTouchMode(true);
+        rootView.requestFocus();
+        rootView.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if( keyCode == KeyEvent.KEYCODE_BACK ) {
+                    cluster_list_layout.setVisibility(View.INVISIBLE);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
         fab = (FloatingActionButton) getActivity().findViewById(R.id.fab);
         fab.setVisibility(View.VISIBLE);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -212,6 +221,32 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             }
         });
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        cluster_list = (ListView) rootView.findViewById(R.id.cluster_list);
+        cluster_list_layout = (RelativeLayout) rootView.findViewById(R.id.cluster_list_layout);
+        cluster_list_layout.setVisibility(View.INVISIBLE);
+        titles = new ArrayList<>();
+        cluster_adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, titles);
+        cluster_list.setAdapter(cluster_adapter);
+        cluster_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                cluster_list_layout.setVisibility(View.INVISIBLE);
+                String title = titles.get(position);
+                for(Note n: notes) {
+                    if (n.getTitle().equals(title)) {
+                        showNote(n);
+                        break;
+                    }
+                }
+            }
+        });
+        View rect = (View) rootView.findViewById(R.id.rect);
+        rect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cluster_list_layout.setVisibility(View.INVISIBLE);
+            }
+        });
         mapFragment.getMapAsync(this);
         buildGoogleApiClient();
         notes = new ArrayList<>();
@@ -220,25 +255,34 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
         try {
             mClient = new MobileServiceClient(
-                    "https://notes-nearby.azurewebsites.net",
+                    "https://notesnearby.azurewebsites.net",
                     getActivity()
             );
             mTable = mClient.getTable(Note.class);
         } catch (MalformedURLException e) {
             Toast.makeText(getActivity(), "Error connecting to server.",Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error connecting to server");
             e.printStackTrace();
         }
 
         return rootView;
     }
 
+    private void showNote(Note n){
+        fab.setVisibility(View.INVISIBLE);
+        Fragment fragment = ShowNoteFragment.newInstance(n.getTitle(), n.getDesc(), n.getLat(), n.getLng(), n.getImg());
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.content_frame, fragment);
+        ft.commit();
+    }
+
     private void  getNotesNearby(){
         Log.i(TAG,"Getting Notes");
         mTable.where()
-                .field("lat").le(mCurrentLocation.latitude+0.001).and()
-                .field("lat").ge(mCurrentLocation.latitude-0.001).and()
-                .field("lng").le(mCurrentLocation.longitude+0.001).and()
-                .field("lng").ge(mCurrentLocation.longitude-0.001)
+                .field("lat").le(mCurrentLocation.latitude+NOTE_RANGE).and()
+                .field("lat").ge(mCurrentLocation.latitude-NOTE_RANGE).and()
+                .field("lng").le(mCurrentLocation.longitude+NOTE_RANGE).and()
+                .field("lng").ge(mCurrentLocation.longitude-NOTE_RANGE)
                 .execute(new TableQueryCallback<Note>() {
             @Override
             public void onCompleted(List<Note> result, int count, Exception exception, ServiceFilterResponse response) {
@@ -332,8 +376,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        provider = mLocationManager.getBestProvider(criteria, true);
+        //Criteria criteria = new Criteria();
+        //provider = mLocationManager.getAllProviders();//(criteria, true);
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -354,33 +398,47 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         mMap.setMyLocationEnabled(true);
         mMap.setPadding(50,50,50,50);
-        mLocationManager.requestLocationUpdates(mLocationManager.GPS_PROVIDER, INTERVAL, FAST_INTERVAL, this);
+        //mLocationManager.requestLocationUpdates(mLocationManager.GPS_PROVIDER, INTERVAL, FAST_INTERVAL, this);
         Criteria cri=new Criteria();
-        provider = mLocationManager.getBestProvider(cri,false);
+        mLocationManager.requestLocationUpdates(INTERVAL, FAST_INTERVAL, cri, this, null);
+        String provider = mLocationManager.getBestProvider(cri,false);
         Location location = mLocationManager.getLastKnownLocation(provider);
         try {
             onLocationChanged(location);
         }catch (Exception e){
             Log.e(TAG, "No Last Location found...");
         }
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+        clusterManager = new ClusterManager<>(getActivity(), mMap);
+        clusterManager.setRenderer(new CustomRenderer<>(getActivity(), mMap, clusterManager));
+        clusterManager.setOnClusterClickListener(new ClusterManager.OnClusterClickListener<ClusterMarkerLocation>() {
             @Override
-            public boolean onMarkerClick(Marker marker) {
-                // TODO: Show Note
-                double  lat = marker.getPosition().latitude,
-                        lng = marker.getPosition().longitude;
+            public boolean onClusterClick(Cluster<ClusterMarkerLocation> cluster) {
+                cluster_list_layout.setVisibility(View.VISIBLE);
+                titles.clear();
+                Collection<ClusterMarkerLocation> markers = cluster.getItems();
+                for(ClusterMarkerLocation m: markers)
+                    titles.add(m.getNote().getTitle());
+                cluster_adapter.notifyDataSetChanged();
+                Log.d(TAG, titles.toString());
+                return false;
+            }
+        });
+        clusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarkerLocation>() {
+            @Override
+            public boolean onClusterItemClick(ClusterMarkerLocation clusterMarkerLocation) {
+                double  lat = clusterMarkerLocation.getPosition().latitude,
+                        lng = clusterMarkerLocation.getPosition().longitude;
                 for(Note n: notes) {
                     if(n.getLat()==lat && n.getLng()==lng){
-                        fab.setVisibility(View.INVISIBLE);
-                        Fragment fragment = ShowNoteFragment.newInstance(n.getTitle(), n.getDesc(), n.getLat(), n.getLng());
-                        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-                        ft.replace(R.id.content_frame, fragment);
-                        ft.commit();
+                        showNote(n);
+                        break;
                     }
                 }
                 return true;
             }
         });
+        mMap.setOnCameraChangeListener(clusterManager);
+        mMap.setOnMarkerClickListener(clusterManager);
     }
 
     /**

@@ -202,7 +202,7 @@ public class ARActivity extends Activity implements
 
     private void updateDescription() {
         descriptionTextView.setText(" latitude "
-                + mMyLatitude + " longitude "  + mMyLongitude);
+                + mMyLatitude + " longitude "  + mMyLongitude + " azimuth " + mAzimuthReal);
     }
 
     @Override

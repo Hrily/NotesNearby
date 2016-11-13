@@ -5,9 +5,21 @@ package com.hrily.notesnearby;
 
 public class Note {
     public double lat, lng;
-    public String title, desc, id;
+    public String title;
+    public String desc;
+    public String img;
+
+    public String id;
 
     public Note(){}
+
+    public Note(double lat, double lng, String title, String desc, String img) {
+        this.lat = lat;
+        this.lng = lng;
+        this.title = title;
+        this.desc = desc;
+        this.img = img;
+    }
 
     public Note(double lat, double lng, String title, String desc) {
         this.lat = lat;
@@ -46,6 +58,14 @@ public class Note {
 
     public void setDesc(String desc) {
         this.desc = desc;
+    }
+
+    public String getImg() {
+        return img;
+    }
+
+    public void setImg(String img) {
+        this.img = img;
     }
 
 }
