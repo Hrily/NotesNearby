@@ -43,6 +43,10 @@ class DeatailViewController: UIViewController,MKMapViewDelegate,CLLocationManage
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.locationManager.requestWhenInUseAuthorization()
         self.locationManager.startUpdatingLocation()
+         self.mapView.showsUserLocation = true
+        self.mapView.showsBuildings = true
+        self.mapView.showsCompass = true
+        self.mapView.showsScale = true
                 
         
         //^^^^^Pushing Points^^^^^
