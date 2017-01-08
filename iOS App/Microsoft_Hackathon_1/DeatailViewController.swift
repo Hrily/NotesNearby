@@ -110,7 +110,7 @@ func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnota
         
             let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "annotationView") ?? MKAnnotationView()
             
-            annotationView.image = UIImage(named: "abc")
+            annotationView.image = UIImage(named: "word_ios")
             annotationView.frame.size=CGSize(width: 30.0, height: 30.0)
             annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
             annotationView.canShowCallout = true
