@@ -43,6 +43,10 @@ class DeatailViewController: UIViewController,MKMapViewDelegate,CLLocationManage
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.locationManager.requestWhenInUseAuthorization()
         self.locationManager.startUpdatingLocation()
+         self.mapView.showsUserLocation = true
+        self.mapView.showsBuildings = true
+        self.mapView.showsCompass = true
+        self.mapView.showsScale = true
                 
         
         //^^^^^Pushing Points^^^^^
@@ -110,7 +114,7 @@ func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnota
         
             let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "annotationView") ?? MKAnnotationView()
             
-            annotationView.image = UIImage(named: "abc")
+            annotationView.image = UIImage(named: "word_ios")
             annotationView.frame.size=CGSize(width: 30.0, height: 30.0)
             annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
             annotationView.canShowCallout = true
