@@ -1,2 +1,0 @@
-# NotesNearby
-NotesNearby Android App
